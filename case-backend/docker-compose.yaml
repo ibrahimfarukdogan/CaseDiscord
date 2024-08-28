@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      ssh:
+        - default
+    restart: always
+    container_name: case-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file: .env
+    volumes:
+      - static_volume:/app/staticfiles
+    develop:
+      watch:
+        - action: sync
+          path: ./
+          target: ./app
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    container_name: case-postgresql
+    volumes: 
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+    env_file: .env
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: case-rabbit
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - rabbitdata:/var/lib/rabbitmq/
+        - rabbitdata:/var/log/rabbitmq
+        - ./definitions.json:/opt/definitions.json:ro
+        - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
+
+volumes:
+  pgdata:
+  static_volume:
+  dbdata6:
+  rabbitdata:
